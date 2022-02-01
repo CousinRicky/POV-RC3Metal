@@ -1,10 +1,10 @@
-/* rc3metal_demo.pov version 1.3A
+/* rc3metal_demo.pov version 2.0
  * Persistence of Vision Raytracer scene description file
  * POV-Ray Object Collection demo
  *
  * Demonstrations of RC3Metal features.
  *
- * Copyright (C) 2013 - 2021 Richard Callwood III.  Some rights reserved.
+ * Copyright (C) 2013 - 2022 Richard Callwood III.  Some rights reserved.
  * This file is licensed under the terms of the CC-LGPL
  * a.k.a. the GNU Lesser General Public License version 2.1.
  *
@@ -45,7 +45,10 @@
  *                     reflection, color, and galvanized cases.
  *        2019-Sep-12  The light attenuation is made slightly steeper.
  * 1.3    2019-Sep-13  Uploaded.
- * 1.3A   2021-Aug-14  The license text and version references are updated.
+ *        2022-Jan-16  The RC3M_Ambient and ambient assignments are rearranged
+ *                     to avoid repeating "magic numbers."
+ * 2.0    2022-Jan-31  The version references are updated to 2.0, and the
+ *                     generated HTML license link points directly to GNU.
  */
 #version max (3.5, min (3.8, version));
 
@@ -101,13 +104,8 @@
     #declare Use_radiosity = no;
 #end
 
-#if (Use_radiosity)
-  #default { finish { ambient 0 } }
-  #declare RC3M_Ambient = 0;
-#else
-  #default { finish { ambient 0.1 } }
-  #declare RC3M_Ambient = 0.1;
-#end
+#declare RC3M_Ambient = (Use_radiosity? 0: 0.1);
+#default { finish { ambient RC3M_Ambient } }
 
 #include "rc3metal.inc"
 RC3Metal_Set_highlight (0.2)
@@ -177,17 +175,17 @@ plane
   concat
   ( "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n",
     "<link rel=\"stylesheet\" type=\"text/css\" href=\"rc3metal_demo.css\">\n",
-    "<title>RC3Metal 1.3A ", s_Title, " | POV-Ray Object Collection</title>\n",
-    "</head>\n<body>\n<h1>RC3Metal 1.3A ", s_Title, "</h1>\n"
+    "<title>RC3Metal 2.0 ", s_Title, " | POV-Ray Object Collection</title>\n",
+    "</head>\n<body>\n<h1>RC3Metal 2.0 ", s_Title, "</h1>\n"
   )
 #end
 
 #macro Html_close()
   concat
-  ( "<address>Copyright &copy; 2013 &ndash; 2021 Richard Callwood III.",
+  ( "<address>Copyright &copy; 2013 &ndash; 2022 Richard Callwood III.",
     " Some rights reserved.\n Licensed under the terms of the"
-    " <a href=\"https://creativecommons.org/licenses/LGPL/2.1/\">",
-    "CC-LGPL</a>.\n</address>\n</body>\n</html>\n"
+    " <a href=\"https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html\">",
+    "GNU LGPL 2.1</a>.\n</address>\n</body>\n</html>\n"
   )
 #end
 

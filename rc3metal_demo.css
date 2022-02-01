@@ -1,10 +1,11 @@
 /* rc3metal_demo.css
  *
- * Copyright (C) 2013 - 2021 Richard Callwood III.  Some rights reserved.
- * This file is licensed under the terms of the CC-LGPL.
- * See https://creativecommons.org/licenses/LGPL/2.1/ for more information.
+ * Copyright (C) 2013 - 2022 Richard Callwood III.  Some rights reserved.
+ * This file is licensed under the terms of the GNU LGPL 2.1.
+ * See https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html for the text of
+ * the license.
  *
- * Version 1.3A  2021-Aug-14
+ * Version 2.0  2022-Jan-31
  */
 body { color:black; background:#ddd; }
 a { color:#00c; }

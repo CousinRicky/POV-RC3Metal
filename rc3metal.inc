@@ -1,10 +1,10 @@
-/* rc3metal.inc version 1.3A
+/* rc3metal.inc version 2.0
  * Persistence of Vision Raytracer include file
  * POV-Ray Object Collection
  *
  * Metallic texture macros and colors.
  *
- * Copyright (C) 2013 - 2021 Richard Callwood III.  Some rights reserved.
+ * Copyright (C) 2013 - 2022 Richard Callwood III.  Some rights reserved.
  * This file is licensed under the terms of the CC-LGPL
  * a.k.a. the GNU Lesser General Public License version 2.1.
  *
@@ -42,7 +42,15 @@
  *        2019-Sep-12  The #version is constrained, rather than just set.
  * 1.3    2019-Sep-13  Bug fix: photons were broken by the 1.2.1 change to
  *                     blurred objects; this is now fixed.
- * 1.3A   2021-Aug-14  The license text is updated.
+ *        2022-Jan-16  If POV >= 3.7, emission 0 is set on the finish.
+ *        2022-Jan-16  Bug fix: color keywords are added to the debug output.
+ *        2022-Jan-16  Bug fix: quick color transmit and filter are suppressed.
+ *        2022-Jan-19  The default albedo, highlight, & roughness are changed.
+ *        2022-Jan-27  Bug fix: Diffuse_part now informs the highlight.
+ *        2022-Jan-31  Slight speedup: blurred normals with Samples=1 are moved
+ *                     outside the loop.
+ * 2.0    2022-Jan-31  In the blurred object macros, the reflected/no_image
+ *                     objects are blurred for micronormals.
  *
  * Implementation note: due to POV-Ray namespace scope leakage, local variables
  * and function parameters (other than x, y, and z) *must* be prefixed.
@@ -52,10 +60,10 @@
 // to prevent user surprises.
 #version max (3.5, min (3.8, version));
 
-#declare RC3METAL_VERSION = 1.3;
+#declare RC3METAL_VERSION = 2.0;
 #ifdef (View_POV_Include_Stack)
-  #debug "#include \"rc3metal.inc\" //version 1.3A\n"
-  #debug concat ("  #version ", str(version,0,3), ";\n")
+  #debug "#include \"rc3metal.inc\" //version 2.0\n"
+  #debug concat ("  #version ", str(version,0,2), ";\n")
 #end
 
 #include "functions.inc"
@@ -66,9 +74,15 @@
 #ifndef (RC3M_Ambient)
   #declare RC3M_Ambient = rgb (RC3Metal_Inc_Temp >= 3.8? 0: 0.1);
 #end
-#ifndef (RC3M_Debug) #declare RC3M_Debug = off; #end
+#ifndef (RC3M_Debug) #declare RC3M_Debug = false; #end
 #ifndef (RC3M_Seed) #declare RC3M_Seed = 0; #end
-#ifndef (RC3M_Albedo) #declare RC3M_Albedo = yes; #end
+#ifdef (RC3M_Albedo)
+  #if (RC3M_Albedo)
+    #warning
+      "Initial RC3M_Albedo is changed to false. Please see the User Manual."
+  #end
+#end
+#declare RC3M_Albedo = false;
 
 //========================== REFERENCE IDENTIFIERS =============================
 
@@ -150,50 +164,52 @@
   #end
   #local rc3m_Albedo_kwd = (version >= 3.7 & RC3M_Albedo);
   #local rc3m_Rough = RC3M_fn_Roughness (Specularity);
-  #local rc3m_Hilite = RC3M_fn_Specular (Specularity);
+ //Reduce the diffuse to complement the specular value:
+  #local rc3m_Actual_diffuse = (1 - Specularity) * Diffuse_part;
+ //Preserve the scene's ambient:diffuse ratio:
+  #local rc3m_Actual_ambient =
+    RC3M_Uncolor_v (rc3m_Actual_diffuse * RC3M_Ambient / RC3M_Diffuse);
+ //'specular albedo' value
+  #local rc3m_Hilite = RC3M_fn_Specular (Specularity) * Diffuse_part
+    + Specularity * (1 - Diffuse_part);
  //If albedo keyword is not used, then adjust the specular level here.
  //See Parser::Parse_Finish() in parstxtr.cpp in the POV-Ray 3.7 source.
   #if (version < 3.7)
     #local rc3m_Hilite = rc3m_Hilite
       * (1 / rc3m_Rough + 2) / (4 * (2 - pow (2, -0.5 / rc3m_Rough)));
   #end
- //Reduce the diffuse to complement the specular value:
-  #local rc3m_Actual_diffuse = (1 - Specularity) * Diffuse_part;
- //Preserve the scene's ambient:diffuse ratio:
- // (5-D color must be used to prevent misleading debugging output)
-  #local rc3m_Actual_ambient =
-    color rc3m_Actual_diffuse * RC3M_Ambient / RC3M_Diffuse
-    filter 0 transmit 0;
 
   #if (RC3M_Debug)
     #debug concat
-    ( "RC3Metal_Finish (", str(Specularity,0,6), ", ", str(Diffuse_part,0,6),
+    ( "RC3Metal_Finish (", str(Specularity,0,4), ", ", str(Diffuse_part,0,4),
       "):\n"
     )
     #debug "  finish\n"
-    #debug concat ("  { reflection { ", str (Specularity,0,6), " metallic }\n")
+    #debug concat ("  { reflection { ", str (Specularity,0,4), " metallic }\n")
     #debug concat
     ( "    diffuse ",
       #if (rc3m_Albedo_kwd) "albedo ", #end
-      str (rc3m_Actual_diffuse, 0, 6), "\n"
+      str (rc3m_Actual_diffuse, 0, 4), "\n"
     )
     #debug concat
-      ("    ambient <", vstr (5, rc3m_Actual_ambient, ", ", 0, 6), ">\n")
+      ("    ambient rgb <", vstr (3, rc3m_Actual_ambient, ", ", 0, 4), ">\n")
+    #if (version >= 3.7) #debug "    emission 0\n" #end
     #debug concat
-      ("    brilliance ", str (RC3M_fn_Brilliance (Specularity), 0, 6), "\n")
+      ("    brilliance ", str (RC3M_fn_Brilliance (Specularity), 0, 4), "\n")
     #debug concat
     ( "    specular ",
       #if (version >= 3.7) "albedo ", #end
-      rc3m__Str (rc3m_Hilite, 6), " metallic\n"
+      rc3m__Str (rc3m_Hilite, 4), " metallic\n"
     )
-    #debug concat ("    roughness ", rc3m__Str (rc3m_Rough, 6), "\n")
+    #debug concat ("    roughness ", rc3m__Str (rc3m_Rough, 4), "\n")
     #debug "  }\n"
   #end
 
   finish
   { reflection { Specularity metallic }
     diffuse #if (rc3m_Albedo_kwd) albedo #end rc3m_Actual_diffuse
-    ambient rc3m_Actual_ambient
+    ambient rgb rc3m_Actual_ambient
+    #if (version >= 3.7) emission 0 #end
     brilliance RC3M_fn_Brilliance (Specularity)
     specular #if (version >= 3.7) albedo #end rc3m_Hilite metallic
     roughness rc3m_Rough
@@ -202,17 +218,18 @@
 
 #macro RC3Metal_Pigment (c_Color, Specularity)
   #local rc3m_Color = color c_Color;
-  #local rc3m_Quick_color = rc3m_Color / max (1 - Specularity, 0.001);
+  #local rc3m_Quick_color =
+    RC3M_Uncolor_v (rc3m_Color / max (1 - Specularity, 0.0001));
 
   #if (RC3M_Debug)
     #debug concat
-    ( "RC3Metal_Pigment (<", vstr (5, rc3m_Color, ", ", 0, 6), ">, ",
-      str(Specularity,0,6), "):\n"
+    ( "RC3Metal_Pigment (<", vstr (5, rc3m_Color, ", ", 0, 4), ">, ",
+      str(Specularity, 0, 4), "):\n"
     )
     #debug "  pigment\n"
-    #debug concat ("  { <", vstr (5, rc3m_Color, ", ", 0, 6), ">\n")
+    #debug concat ("  { color <", vstr (5, rc3m_Color, ", ", 0, 4), ">\n")
     #debug concat
-      ("    quick_color <", vstr (5, rc3m_Quick_color, ", ", 0, 6), ">\n")
+      ("    quick_color <", vstr (3, rc3m_Quick_color, ", ", 0, 4), ">\n")
     #debug "  }\n"
   #end
 
@@ -235,32 +252,44 @@
 
 #macro RC3Metal_Blur_t (t_Base, Blurriness, Scale, Samples)
   texture
-  { average texture_map
-    { #local rc3m_I = 0;
-      #while (rc3m_I < Samples)
-        [1 t_Base normal { rc3m__Blur_sample_n (Blurriness, Scale) }]
-        #local rc3m_I = rc3m_I + 1;
-      #end
-    }
+  { #if (Samples = 1)
+      t_Base normal { rc3m__Blur_sample_n (Blurriness, Scale) }
+    #else
+      average texture_map
+      { #local rc3m_I = 0;
+        #while (rc3m_I < Samples)
+          [1 t_Base normal { rc3m__Blur_sample_n (Blurriness, Scale) }]
+          #local rc3m_I = rc3m_I + 1;
+        #end
+      }
+    #end
   }
 #end
 
 #macro RC3Metal_Normal_blur_t (t_Base, Blurriness, Scale, Samples, n_Normal)
   texture
-  { average texture_map
-    { #local rc3m_I = 0;
-      #while (rc3m_I < Samples)
-        [1 t_Base
-          normal
-          { average normal_map
-            { [1 rc3m__Blur_sample_n (Blurriness, Scale)]
-              [1 n_Normal]
+  { #if (Samples = 1)
+      t_Base normal
+      { average normal_map
+        { [1 rc3m__Blur_sample_n (Blurriness, Scale)]
+          [1 n_Normal]
+        }
+      }
+    #else
+      average texture_map
+      { #local rc3m_I = 0;
+        #while (rc3m_I < Samples)
+          [1 t_Base normal
+            { average normal_map
+              { [1 rc3m__Blur_sample_n (Blurriness, Scale)]
+                [1 n_Normal]
+              }
             }
-          }
-        ]
-        #local rc3m_I = rc3m_I + 1;
-      #end
-    }
+          ]
+          #local rc3m_I = rc3m_I + 1;
+        #end
+      }
+    #end
   }
 #end
 
@@ -274,14 +303,20 @@
     }
     object
     { o_Object
-      texture { t_Base }
+      #if (Scale < 1)
+        RC3Metal_Blur_t (t_Base, Blurriness, Scale, 1)
+      #else
+        texture { t_Base }
+      #end
       no_image
       no_shadow
     }
   }
 #end
 
-#macro RC3Metal_Normal_blur (o_Object, t_Base, Blurriness, Scale, Samples, n_Normal)
+#macro RC3Metal_Normal_blur
+( o_Object, t_Base, Blurriness, Scale, Samples, n_Normal
+)
   union
   { object
     { o_Object
@@ -291,7 +326,11 @@
     }
     object
     { o_Object
-      texture { t_Base normal { n_Normal } }
+      #if (Scale < 1)
+        RC3Metal_Normal_blur_t (t_Base, Blurriness, Scale, 1, n_Normal)
+      #else
+        texture { t_Base normal { n_Normal } }
+      #end
       no_image
       no_shadow
     }
@@ -364,10 +403,10 @@
 
 #macro RC3Metal_Set_highlight (Hilite)
   #local rc3m_This = "RC3Metal_Set_highlight"
-  #if (Hilite < 0 | !(Hilite < 1))
+  #if (Hilite < 0 | Hilite >= 1)
     #warning concat
     ( rc3m_This, "(): the Hilite argument should be a non-negative",
-      " number less than one, but ", rc3m__Str (Hilite, 6), " was passed."
+      " number less than one, but ", rc3m__Str (Hilite, 4), " was passed."
     )
   #end
   #if (RC3M_Albedo & version >= 3.7)
@@ -377,18 +416,9 @@
   RC3Metal_Set_functions (Hilite, 2 / (1 - Hilite) - 1)
 #end
 
-#declare RC3M_fn_Roughness = function (x)
-{ #local rc3m_ROUGH = 400;
-  #local rc3m_EPSILON = 1e-6;
-  max
-  ( rc3m_EPSILON,
-    0.06 * (1 / pow (rc3m_ROUGH, x) - 1/rc3m_ROUGH)
-         * rc3m_ROUGH / (rc3m_ROUGH - 1)
-  )
-}
+#declare RC3M_fn_Roughness = function (x) { pow (150, -x) * 0.05 }
 
-//Grandfather the RC3Metal 1.0 settings:
-RC3Metal_Set_functions ((version >= 3.7 & RC3M_Albedo? 0.2: 0.4), 2.5)
+RC3Metal_Set_highlight (0.25)
 
 //================================== NORMAL ====================================
 

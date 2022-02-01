@@ -1,10 +1,10 @@
-/* rc3metal.pov version 1.3A
+/* rc3metal.pov version 2.0
  * Persistence of Vision Raytracer scene description file
  * POV-Ray Object Collection demo
  *
  * Demo of rc3metal.inc
  *
- * Copyright (C) 2013 - 2021 Richard Callwood III.  Some rights reserved.
+ * Copyright (C) 2013 - 2022 Richard Callwood III.  Some rights reserved.
  * This file is licensed under the terms of the CC-LGPL
  * a.k.a. the GNU Lesser General Public License version 2.1.
  *
@@ -35,7 +35,7 @@
  *                     moderate the sky color.
  *        2019-Sep-12  The indoor lighting is reformed.
  * 1.3    2019-Sep-13  Photons are used on some objects.
- * 1.3A   2021-Aug-14  The license text is updated.
+ * 2.0    2022-Jan-31  The highlight is increased on the galvanized texture.
  */
 /*
  * POV-Ray 3.5, 3.7, 3.8 // +A0.05 +AM1 +R5 +W800 +H600
@@ -311,7 +311,7 @@ sphere
   translate lv_Floor_spot + <0, 0, -1>
 }
 
-RC3Metal_Set_highlight (0.3)
+RC3Metal_Set_highlight (0.5)
 #declare t_Galv = RC3Metal_Galvanized_t
 ( RC3M_C_ZINC, RC3M_C_STEEL, 0, 0.8, 0.25, 0.5, 0.4
 )
