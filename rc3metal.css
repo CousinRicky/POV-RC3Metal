@@ -5,7 +5,7 @@
  * See https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html for the text of
  * the license.
  *
- * Version 2.0  2022-Jan-31
+ * Version 2.0  2022-Jan-31, updated 2022-Feb-19
  */
 a:link    { color:#00c; }
 a:visited { color:#606; }
@@ -157,7 +157,10 @@ th
 ul { list-style:square; }
 td ul,
 ul ul { list-style:disc; }
-var { font-family:serif; }
+var
+{ font-family:serif;
+  letter-spacing:0;
+}
 
 .demo
 { float:right;
