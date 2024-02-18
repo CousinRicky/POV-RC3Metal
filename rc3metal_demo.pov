@@ -1,11 +1,11 @@
-/* rc3metal_demo.pov version 2.0
+/* rc3metal_demo.pov version 2.1-beta.1
  * Persistence of Vision Raytracer scene description file
  * POV-Ray Object Collection demo
  *
  * Demonstrations of RC3Metal features.
  *
- * Copyright (C) 2013 - 2022 Richard Callwood III.  Some rights reserved.
- * This file is licensed under the terms of the CC-LGPL
+ * Copyright (C) 2013 - 2024 Richard Callwood III.  Some rights reserved.
+ * This file is licensed under the terms of the GNU-LGPL
  * a.k.a. the GNU Lesser General Public License version 2.1.
  *
  * This library is free software; you can redistribute it and/or
@@ -49,6 +49,9 @@
  *                     to avoid repeating "magic numbers."
  * 2.0    2022-Jan-31  The version references are updated to 2.0, and the
  *                     generated HTML license link points directly to GNU.
+ *        2024-Jan-20  The license link opens in a new tab.
+ *        2024-Jan-20  The point prefix is changed to PV_ ("point vector").
+ * 2.1    2024-???-??  The version references are updated.
  */
 #version max (3.5, min (3.8, version));
 
@@ -127,23 +130,23 @@ global_settings
 #declare RROOM = 6;
 #declare HROOM = 8;
 #declare VIEW = 2.5;
-#declare LV_LIGHT = <1 - RROOM, HROOM - 1, 1 - RROOM>;
-#declare LV_CAM = <RROOM - 1, 5, 1 - RROOM>;
-#declare LV_OBJ = <0, 1, RROOM - 2>;
-#declare Field = VIEW / vlength (LV_OBJ - LV_CAM);
+#declare PV_LIGHT = <1 - RROOM, HROOM - 1, 1 - RROOM>;
+#declare PV_CAM = <RROOM - 1, 5, 1 - RROOM>;
+#declare PV_OBJ = <0, 1, RROOM - 2>;
+#declare Field = VIEW / vlength (PV_OBJ - PV_CAM);
 camera
-{ location LV_CAM
-  look_at LV_OBJ
+{ location PV_CAM
+  look_at PV_OBJ
   right Field * x
   up Field * y
 }
 
-#declare dLight = vlength (LV_LIGHT - LV_OBJ);
+#declare dLight = vlength (PV_LIGHT - PV_OBJ);
 // Use a large fade distance because, prior to POV-Ray 3.7,
 // no_radiosity is unavailable for the looks_like:
 #declare rFade = dLight / 3;
 light_source
-{ LV_LIGHT, rgb (1 + pow (dLight / rFade, 2)) / 2
+{ PV_LIGHT, rgb (1 + pow (dLight / rFade, 2)) / 2
   fade_power 2 fade_distance rFade
   looks_like
   { sphere
@@ -175,8 +178,8 @@ plane
   concat
   ( "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n",
     "<link rel=\"stylesheet\" type=\"text/css\" href=\"rc3metal_demo.css\">\n",
-    "<title>RC3Metal 2.0 ", s_Title, " | POV-Ray Object Collection</title>\n",
-    "</head>\n<body>\n<h1>RC3Metal 2.0 ", s_Title, "</h1>\n"
+    "<title>RC3Metal 2.1-beta.1 ", s_Title, " | POV-Ray Object Collection</title>\n",
+    "</head>\n<body>\n<h1>RC3Metal 2.1-beta.1 ", s_Title, "</h1>\n"
   )
 #end
 
@@ -184,8 +187,8 @@ plane
   concat
   ( "<address>Copyright &copy; 2013 &ndash; 2022 Richard Callwood III.",
     " Some rights reserved.\n Licensed under the terms of the"
-    " <a href=\"https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html\">",
-    "GNU LGPL 2.1</a>.\n</address>\n</body>\n</html>\n"
+    " <a href=\"https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html\"",
+    " target=\"_blank\">GNU-LGPL 2.1</a>.\n</address>\n</body>\n</html>\n"
   )
 #end
 
@@ -269,7 +272,7 @@ plane
         Scales [frame_number - 1],
         Samples [frame_number - 1]
       )
-      translate LV_OBJ
+      translate PV_OBJ
     }
 
    //Create HTML file:
@@ -331,7 +334,7 @@ plane
 
    //Render:
     sphere
-    { LV_OBJ, 1
+    { PV_OBJ, 1
       #if (frame_number >= 1 & frame_number <= N)
         RC3Metal (s_Colors [frame_number - 1], 0.9, 0.5)
       #end
@@ -396,7 +399,7 @@ plane
     #declare Row = mod (frame_number - 1, NFINISHES);
     #declare Column = floor ((frame_number - 1) / NFINISHES);
     sphere
-    { LV_OBJ, 1
+    { PV_OBJ, 1
       #if (Is_standard (Column))
         texture { t_Textures [NFINISHES*Demo + Row] }
       #else
@@ -516,7 +519,7 @@ plane
     #declare Row = mod (frame_number - 1, NFINISHES);
     #declare Column = floor ((frame_number - 1) / NFINISHES);
     sphere
-    { LV_OBJ, 1
+    { PV_OBJ, 1
       #if (Is_standard (Column))
         texture { t_Textures [NFINISHES*Demo + Row] }
       #else
@@ -589,7 +592,7 @@ plane
     #declare Row = mod (frame_number - 1, NEXAMPLES);
     #declare Column = floor ((frame_number - 1) / NEXAMPLES);
     sphere
-    { LV_OBJ, 1
+    { PV_OBJ, 1
       #if (Is_standard (Column))
         texture { t_Textures[Row] }
       #else
@@ -652,7 +655,7 @@ plane
     object
     { Round_Box (-<1, 1, 0.05>, <1, 1, 0.05>, 0.015, no)
       texture { t_Demo scale 0.15 }
-      translate LV_OBJ
+      translate PV_OBJ
     }
 
    //Create HTML file:

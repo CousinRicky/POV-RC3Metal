@@ -1,11 +1,11 @@
-/* rc3metal.pov version 2.0
+/* rc3metal.pov version 2.1-beta.1
  * Persistence of Vision Raytracer scene description file
  * POV-Ray Object Collection demo
  *
  * Demo of rc3metal.inc
  *
  * Copyright (C) 2013 - 2022 Richard Callwood III.  Some rights reserved.
- * This file is licensed under the terms of the CC-LGPL
+ * This file is licensed under the terms of the GNU-LGPL
  * a.k.a. the GNU Lesser General Public License version 2.1.
  *
  * This library is free software; you can redistribute it and/or
@@ -36,6 +36,7 @@
  *        2019-Sep-12  The indoor lighting is reformed.
  * 1.3    2019-Sep-13  Photons are used on some objects.
  * 2.0    2022-Jan-31  The highlight is increased on the galvanized texture.
+ * 2.1    2024-???-??  The point prefix is changed to pv_ ("point vector").
  */
 /*
  * POV-Ray 3.5, 3.7, 3.8 // +A0.05 +AM1 +R5 +W800 +H600
@@ -77,9 +78,9 @@
 #declare HWIN = 3.5;
 #declare RLIGHT = 1/3;
 
-#declare LV_LIGHT = <0, HROOM - 1, 0>;
-#declare LV_AIM = <0, 1, RROOM - 2>;
-#declare lv_Floor_spot = <LV_AIM.x, 0, LV_AIM.z>;
+#declare PV_LIGHT = <0, HROOM - 1, 0>;
+#declare PV_AIM = <0, 1, RROOM - 2>;
+#declare pv_Floor_spot = <PV_AIM.x, 0, PV_AIM.z>;
 
 //-------------------------------- LIBRARIES -----------------------------------
 
@@ -119,7 +120,7 @@ global_settings
 
 camera
 { location <1 - RROOM, 5, 1 - RROOM>
-  look_at LV_AIM + <0.14, -0.14, 0>
+  look_at PV_AIM + <0.14, -0.14, 0>
   angle 22.5
 }
 
@@ -191,7 +192,7 @@ box { -1, 1 - y scale RROOM + DWALL pigment { checker rgb 1 rgb 0.05 } }
 
 //------- indoor illumination ----------
 
-#declare dLight = vlength (LV_LIGHT - LV_AIM);
+#declare dLight = vlength (PV_LIGHT - PV_AIM);
 // Use a large fade distance because, prior to POV-Ray 3.7,
 // no_radiosity is unavailable for the looks_like:
 #declare rFade = dLight / 3;
@@ -219,11 +220,11 @@ union
     }
   }
   union
-  { cylinder { RLIGHT * y, (HROOM - LV_LIGHT) * y, 1/16 }
+  { cylinder { RLIGHT * y, (HROOM - PV_LIGHT) * y, 1/16 }
     cone { y, 1, 2*y, 0 open scale RLIGHT / sqrt(2) }
     RC3Metal (RC3M_C_BRONZE, 0.25, 0.5)
   }
-  translate LV_LIGHT
+  translate PV_LIGHT
 }
 
 //----------------------------------- DEMO -------------------------------------
@@ -277,15 +278,15 @@ union
 
 object
 { Stand (RC3M_C_GOLD_LIGHT, 1, "1")
-  translate lv_Floor_spot + <0, 0, 1>
+  translate pv_Floor_spot + <0, 0, 1>
 }
 object
 { Stand (RC3M_C_SILVER, 0.75, "2")
-  translate lv_Floor_spot + <-1.2, 0, 1>
+  translate pv_Floor_spot + <-1.2, 0, 1>
 }
 object
 { Stand (RC3M_C_BRONZE_NEW, 0.5, "3")
-  translate lv_Floor_spot + <1.2, 0, 1>
+  translate pv_Floor_spot + <1.2, 0, 1>
 }
 
 sphere
@@ -302,13 +303,13 @@ sphere
     scale <1, 0.002, 1>
   }
   rotate -90 * y //Turn uv-mapped seam so it doesn't reflect in chrome sphere
-  translate lv_Floor_spot + <-1.2, 0, -1>
+  translate pv_Floor_spot + <-1.2, 0, -1>
 }
 
 sphere
 { y, 1 scale 0.5
   RC3Metal (RC3M_C_CHROME, 1, 0.5)
-  translate lv_Floor_spot + <0, 0, -1>
+  translate pv_Floor_spot + <0, 0, -1>
 }
 
 RC3Metal_Set_highlight (0.5)
@@ -318,6 +319,6 @@ RC3Metal_Set_highlight (0.5)
 object
 { Wire_Box_Union (-<0.5, 0, 0.5>, <0.5, 1, 0.5>, 1/12)
   texture { t_Galv scale 0.05 }
-  translate lv_Floor_spot + <1.2, 0, -1>
+  translate pv_Floor_spot + <1.2, 0, -1>
 }
 // end of rc3metal.pov

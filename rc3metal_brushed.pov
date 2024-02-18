@@ -1,11 +1,11 @@
-/* rc3metal_brushed.pov version 2.0
+/* rc3metal_brushed.pov version 2.1-beta.1
  * Persistence of Vision Raytracer scene description file
  * POV-Ray Object Collection demo
  *
  * Contrast the brushed metal normals from textures.inc and rc3metal.inc.
  *
- * Copyright (C) 2013 - 2022 Richard Callwood III.  Some rights reserved.
- * This file is licensed under the terms of the CC-LGPL
+ * Copyright (C) 2013 - 2024 Richard Callwood III.  Some rights reserved.
+ * This file is licensed under the terms of the GNU-LGPL
  * a.k.a. the GNU Lesser General Public License version 2.1.
  *
  * This library is free software; you can redistribute it and/or
@@ -24,9 +24,10 @@
  *        2012-Sep-22  Adapted for Object Collection: my custom-written include
  *                     files are dropped and replaced with in-line code.
  * 1.0    2013-Mar-09  Uploaded.
- * 1.2.1  2016-Mar-11  The lighting is replaced with calculated values from my
- *                     private render rig.
+ * 1.2.1  2016-Mar-11  The lighting is replaced with calculated values from
+ *                     ShapeOfTheDay (proposed for the Object Collection).
  * 2.0    2022-Jan-31  The POV-Ray version is auto-detected.
+ * 2.1    2024-???-??  No change.
  */
 // +W240 +H240 +A0.05 +AM1 +R5 +J +KFF2
 #version max (3.5, min (3.8, version));

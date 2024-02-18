@@ -2,4 +2,4 @@ Macros for creating metallic textures that are more realistic-looking than the m
 
 Ambient and diffuse levels are automatically adjusted, and brilliance can be coordinated with specular highlights. Blurred reflection, galvanized metal, and a brushed normal are included, and common metal colors are suggested.
 
-Important changes have been made in version 2.0; please see the User Manual.
+Important changes were made in version 2.0; please see the User Manual.

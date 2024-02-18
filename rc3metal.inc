@@ -1,11 +1,11 @@
-/* rc3metal.inc version 2.0
+/* rc3metal.inc version 2.1-beta.1
  * Persistence of Vision Raytracer include file
  * POV-Ray Object Collection
  *
  * Metallic texture macros and colors.
  *
- * Copyright (C) 2013 - 2022 Richard Callwood III.  Some rights reserved.
- * This file is licensed under the terms of the CC-LGPL
+ * Copyright (C) 2013 - 2024 Richard Callwood III.  Some rights reserved.
+ * This file is licensed under the terms of the GNU-LGPL
  * a.k.a. the GNU Lesser General Public License version 2.1.
  *
  * This library is free software; you can redistribute it and/or
@@ -51,6 +51,9 @@
  *                     outside the loop.
  * 2.0    2022-Jan-31  In the blurred object macros, the reflected/no_image
  *                     objects are blurred for micronormals.
+ *        2022-Dec-06  Zero is disallowed for RC3M_Diffuse.
+ *        2024-Jan-21  RC3Metal_Inc_Temp references are replaced with version.
+ * 2.1    2024-???-??  A macro is added to adjust the roughness function.
  *
  * Implementation note: due to POV-Ray namespace scope leakage, local variables
  * and function parameters (other than x, y, and z) *must* be prefixed.
@@ -60,9 +63,9 @@
 // to prevent user surprises.
 #version max (3.5, min (3.8, version));
 
-#declare RC3METAL_VERSION = 2.0;
+#declare RC3METAL_VERSION = 2.1;
 #ifdef (View_POV_Include_Stack)
-  #debug "#include \"rc3metal.inc\" //version 2.0\n"
+  #debug "#include \"rc3metal.inc\" //version 2.1-beta.1\n"
   #debug concat ("  #version ", str(version,0,2), ";\n")
 #end
 
@@ -72,7 +75,7 @@
 
 #ifndef (RC3M_Diffuse) #declare RC3M_Diffuse = 0.6; #end
 #ifndef (RC3M_Ambient)
-  #declare RC3M_Ambient = rgb (RC3Metal_Inc_Temp >= 3.8? 0: 0.1);
+  #declare RC3M_Ambient = rgb (version >= 3.8? 0: 0.1);
 #end
 #ifndef (RC3M_Debug) #declare RC3M_Debug = false; #end
 #ifndef (RC3M_Seed) #declare RC3M_Seed = 0; #end
@@ -155,20 +158,24 @@
 
 #macro RC3Metal_Finish (Specularity, Diffuse_part)
 
-  #if (RC3M_Albedo & RC3Metal_Inc_Temp < 3.7 & !rc3m__Warned_albedo)
+  #if (RC3M_Albedo & version < 3.7 & !rc3m__Warned_albedo)
     #warning concat
-    ( "RC3Metal_Finish(): POV-Ray ", str (RC3Metal_Inc_Temp, 0, 2),
+    ( "RC3Metal_Finish(): POV-Ray ", str (version, 0, 2),
       ": RC3M_Albedo is ignored."
     )
     #declare rc3m__Warned_albedo = yes;
+  #end
+  #if (RC3M_Diffuse = 0)
+    #warning "RC3Metal_Finish(): RC3M_Diffuse was set to zero; 0.6 is substituted."
   #end
   #local rc3m_Albedo_kwd = (version >= 3.7 & RC3M_Albedo);
   #local rc3m_Rough = RC3M_fn_Roughness (Specularity);
  //Reduce the diffuse to complement the specular value:
   #local rc3m_Actual_diffuse = (1 - Specularity) * Diffuse_part;
  //Preserve the scene's ambient:diffuse ratio:
-  #local rc3m_Actual_ambient =
-    RC3M_Uncolor_v (rc3m_Actual_diffuse * RC3M_Ambient / RC3M_Diffuse);
+  #local rc3m_Actual_ambient = RC3M_Uncolor_v
+  ( rc3m_Actual_diffuse * RC3M_Ambient / (RC3M_Diffuse = 0? 0.6: RC3M_Diffuse)
+  );
  //'specular albedo' value
   #local rc3m_Hilite = RC3M_fn_Specular (Specularity) * Diffuse_part
     + Specularity * (1 - Diffuse_part);
@@ -229,11 +236,11 @@
     #debug "  pigment\n"
     #debug concat ("  { color <", vstr (5, rc3m_Color, ", ", 0, 4), ">\n")
     #debug concat
-      ("    quick_color <", vstr (3, rc3m_Quick_color, ", ", 0, 4), ">\n")
+      ("    quick_color rgb <", vstr (3, rc3m_Quick_color, ", ", 0, 4), ">\n")
     #debug "  }\n"
   #end
 
-  pigment { rc3m_Color quick_color rc3m_Quick_color }
+  pigment { rc3m_Color quick_color rgb rc3m_Quick_color }
 #end
 
 #macro RC3Metal (c_Color, Specularity, Diffuse_part)
@@ -416,9 +423,21 @@
   RC3Metal_Set_functions (Hilite, 2 / (1 - Hilite) - 1)
 #end
 
-#declare RC3M_fn_Roughness = function (x) { pow (150, -x) * 0.05 }
+#macro RC3Metal_Set_roughness (Roughest, Smoothest)
+  #if (Roughest <= 0 | Smoothest <= 0)
+    #error concat
+    ( "RC3Metal_Set_roughness (", rc3m__Str (Roughest, 3), ", ",
+      rc3m__Str (Smoothest, 3), "): arguments must be positive."
+    )
+  #end
+  #ifdef (RC3M_fn_Roughness) #undef RC3M_fn_Roughness #end
+  #declare RC3M_fn_Roughness = function (x)
+  { pow (Roughest / Smoothest, -x) * Roughest
+  }
+#end
 
 RC3Metal_Set_highlight (0.25)
+RC3Metal_Set_roughness (0.05, 1/3000)
 
 //================================== NORMAL ====================================
 
